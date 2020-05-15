@@ -54,7 +54,7 @@ check_fileServerType_param $fileServerType
     sudo add-apt-repository ppa:ondrej/php -y
   ### Añadido UniOvi
   sudo apt-get -y update
-  sudo apt-get -y install unattended-upgrades
+  #sudo apt-get -y install unattended-upgrades
 
   # install pre-requisites
   sudo apt-get -y install python-software-properties unzip rsyslog
@@ -95,11 +95,11 @@ check_fileServerType_param $fileServerType
   ### Añadido UniOvi
    echo "****************************************************************************************************************************"
    echo "La version de PHP es: $PhpVer"
-   echo "La version de WebServer es: $WebServerType"
+   echo "La version de WebServer es: $webServerType"
    echo "La version de Terminador es: $httpsTermination"
    echo "****************************************************************************************************************************"
   ### Añadido UniOvi
-  
+
   if [ $fileServerType = "gluster" ]; then
     # Mount gluster fs for /moodle
     sudo mkdir -p /moodle
