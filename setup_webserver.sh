@@ -74,9 +74,9 @@ check_fileServerType_param $fileServerType
   # install the base stack Cambios UniOvi
      sudo apt-get -y install varnish php7.2 php7.2-cli php7.2-curl php7.2-zip php-pear php7.2-mbstring php7.2-dev php7.2-igbinary mcrypt
       echo "*********** Acabo de instalar PHP7.2-Base *****************************************************************************"
-  if [ "$webServerType" = "nginx" -o "$httpsTermination" = "VMSS" ]; then
+
     sudo apt-get -y install nginx
-  fi
+  
 
   #if [ "$webServerType" = "apache" ]; then
     # install apache pacakges
@@ -136,7 +136,6 @@ local2.*   @${syslogServer}:514
 EOF
   service syslog restart
 
-  if [ "$webServerType" = "nginx" -o "$httpsTermination" = "VMSS" ]; then
     # Build nginx config
     cat <<EOF > /etc/nginx/nginx.conf
 user www-data;
@@ -180,15 +179,6 @@ http {
   gzip_http_version 1.1;
   gzip_types text/plain text/css application/json application/x-javascript text/xml application/xml application/xml+rss text/javascript;
 EOF
-    if [ "$httpsTermination" != "None" ]; then
-      cat <<EOF >> /etc/nginx/nginx.conf
-  map \$http_x_forwarded_proto \$fastcgi_https {                                                                                          
-    default \$https;                                                                                                                   
-    http '';                                                                                                                          
-    https on;                                                                                                                         
-  }
-EOF
-    fi
 
     cat <<EOF >> /etc/nginx/nginx.conf
   log_format moodle_combined '\$remote_addr - \$upstream_http_x_moodleuser [\$time_local] '
@@ -200,7 +190,6 @@ EOF
   include /etc/nginx/sites-enabled/*;
 }
 EOF
-  fi # if [ "$webServerType" = "nginx" -o "$httpsTermination" = "VMSS" ];
 
   # Set up html dir local copy if specified
   htmlRootDir="/moodle/html/moodle"
@@ -211,7 +200,6 @@ EOF
     setup_html_local_copy_cron_job
   fi
 
-  if [ "$httpsTermination" = "VMSS" ]; then
     # Configure nginx/https
     cat <<EOF >> /etc/nginx/sites-enabled/${siteFQDN}.conf
 server {
@@ -251,9 +239,7 @@ server {
         }
 }
 EOF
-  fi
 
-  if [ "$webServerType" = "nginx" ]; then
     cat <<EOF >> /etc/nginx/sites-enabled/${siteFQDN}.conf
 server {
         listen 81 default;
@@ -273,15 +259,6 @@ server {
         real_ip_header      X-Forwarded-For;
         real_ip_recursive   on;
 EOF
-    if [ "$httpsTermination" != "None" ]; then
-      cat <<EOF >> /etc/nginx/sites-enabled/${siteFQDN}.conf
-        # Redirect to https
-        if (\$http_x_forwarded_proto != https) {
-                return 301 https://\$server_name\$request_uri;
-        }
-        rewrite ^/(.*\.php)(/)(.*)$ /\$1?file=/\$3 last;
-EOF
-    fi
     cat <<EOF >> /etc/nginx/sites-enabled/${siteFQDN}.conf
         # Filter out php-fpm status page
         location ~ ^/server-status {
@@ -309,56 +286,10 @@ EOF
 }
 
 EOF
-  fi # if [ "$webServerType" = "nginx" ];
 
- # if [ "$webServerType" = "apache" ]; then
-    # Configure Apache/php
-  #  sed -i "s/Listen 80/Listen 81/" /etc/apache2/ports.conf
-  #  a2enmod rewrite && a2enmod remoteip && a2enmod headers
 
-  #  cat <<EOF >> /etc/apache2/sites-enabled/${siteFQDN}.conf
-#<VirtualHost *:81>
-#	ServerName ${siteFQDN}
-
-#	ServerAdmin webmaster@localhost
-#	DocumentRoot ${htmlRootDir}
-
-#	<Directory ${htmlRootDir}>
-#		Options FollowSymLinks
-#		AllowOverride All
-#		Require all granted
-#	</Directory>
-#EOF
-#    if [ "$httpsTermination" != "None" ]; then
-#      cat <<EOF >> /etc/apache2/sites-enabled/${siteFQDN}.conf
-#    # Redirect unencrypted direct connections to HTTPS
-#    <IfModule mod_rewrite.c>
-#      RewriteEngine on
-#      RewriteCond %{HTTP:X-Forwarded-Proto} !https [NC]
-#      RewriteRule ^ https://%{SERVER_NAME}%{REQUEST_URI} [L,R=301]
-#    </IFModule>
-#EOF
-#    fi
-#    cat <<EOF >> /etc/apache2/sites-enabled/${siteFQDN}.conf
-    # Log X-Forwarded-For IP address instead of varnish (127.0.0.1)
-#    SetEnvIf X-Forwarded-For "^.*\..*\..*\..*" forwarded
-#    LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"" combined
-#    LogFormat "%{X-Forwarded-For}i %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"" forwarded
-#	ErrorLog "|/usr/bin/logger -t moodle -p local1.error"
-#    CustomLog "|/usr/bin/logger -t moodle -p local1.notice" combined env=!forwarded
-#    CustomLog "|/usr/bin/logger -t moodle -p local1.notice" forwarded env=forwarded
-
-#</VirtualHost>
-#EOF
-#  fi # if [ "$webServerType" = "apache" ];
-
-   # php config 
- #  if [ "$webServerType" = "apache" ]; then
- #    PhpIni=/etc/php/${PhpVer}/apache2/php.ini
- #  else
      PhpIni=/etc/php/${PhpVer}/fpm/php.ini
- #  fi
-   sed -i "s/memory_limit.*/memory_limit = 512M/" $PhpIni
+    sed -i "s/memory_limit.*/memory_limit = 512M/" $PhpIni
    sed -i "s/max_execution_time.*/max_execution_time = 18000/" $PhpIni
    sed -i "s/max_input_vars.*/max_input_vars = 100000/" $PhpIni
    sed -i "s/max_input_time.*/max_input_time = 600/" $PhpIni
@@ -374,18 +305,11 @@ EOF
     
    # Remove the default site. Moodle is the only site we want
    rm -f /etc/nginx/sites-enabled/default
- #  if [ "$webServerType" = "apache" ]; then
- #    rm -f /etc/apache2/sites-enabled/000-default.conf
- #  fi
-
-   if [ "$webServerType" = "nginx" -o "$httpsTermination" = "VMSS" ]; then
-     # update startup script to wait for certificate in /moodle mount
+    # update startup script to wait for certificate in /moodle mount
      setup_moodle_mount_dependency_for_systemd_service nginx || exit 1
      # restart Nginx
      sudo service nginx restart 
-   fi
-
-   if [ "$webServerType" = "nginx" ]; then
+ 
      # fpm config - overload this 
      cat <<EOF > /etc/php/${PhpVer}/fpm/pool.d/www.conf
 [www]
@@ -403,14 +327,7 @@ EOF
 
      # Restart fpm
      service php${PhpVer}-fpm restart
-   fi
-
-#   if [ "$webServerType" = "apache" ]; then
-#      if [ "$htmlLocalCopySwitch" != "true" ]; then
-#        setup_moodle_mount_dependency_for_systemd_service apache2 || exit 1
-#      fi
-#      sudo service apache2 restart
-#   fi
+ 
 
    # Configure varnish startup for 16.04
    VARNISHSTART="ExecStart=\/usr\/sbin\/varnishd -j unix,user=vcache -F -a :80 -T localhost:6082 -f \/etc\/varnish\/moodle.vcl -S \/etc\/varnish\/secret -s malloc,1024m -p thread_pool_min=200 -p thread_pool_max=4000 -p thread_pool_add_delay=2 -p timeout_linger=100 -p timeout_idle=30 -p send_timeout=1800 -p thread_pools=4 -p http_max_hdr=512 -p workspace_backend=512k"
