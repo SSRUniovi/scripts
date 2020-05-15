@@ -48,9 +48,10 @@ check_fileServerType_param $fileServerType
 
 {
   # make sure the system does automatic update
-   ### Añadido UniOvi
+  ### Añadido UniOvi
     sudo apt install software-properties-common
     sudo add-apt-repository ppa:nginx/stable -y
+    sudo add-apt-repository ppa:ondrej/php -y
   ### Añadido UniOvi
   sudo apt-get -y update
   sudo apt-get -y install unattended-upgrades
@@ -69,9 +70,9 @@ check_fileServerType_param $fileServerType
     sudo apt-get -y install cifs-utils
   fi
 
-  # install the base stack
-  sudo apt-get -y install varnish php php-cli php-curl php-zip php-pear php-mbstring php-dev mcrypt
-
+  # install the base stack Cambios UniOvi
+  #sudo apt-get -y install varnish php php-cli php-curl php-zip php-pear php-mbstring php-dev mcrypt
+   sudo apt-get -y install varnish php7.2 php7.2-cli php7.2-curl php7.2-zip php-pear php7.2-mbstring php7.2-dev php7.2-igbinary mcrypt
   if [ "$webServerType" = "nginx" -o "$httpsTermination" = "VMSS" ]; then
     sudo apt-get -y install nginx
   fi
@@ -81,17 +82,25 @@ check_fileServerType_param $fileServerType
     sudo apt-get -y install apache2 libapache2-mod-php
   else
     # for nginx-only option
-    sudo apt-get -y install php-fpm
+    #sudo apt-get -y install php-fpm Cambios UniOvi
+    sudo apt-get -y install php7.2-fpm
   fi
 
   # Moodle requirements
-  sudo apt-get install -y graphviz aspell php-soap php-json php-redis php-bcmath php-gd php-pgsql php-mysql php-xmlrpc php-intl php-xml php-bz2
+  #sudo apt-get install -y graphviz aspell php-soap php-json php-redis php-bcmath php-gd php-pgsql php-mysql php-xmlrpc php-intl php-xml php-bz2
+  sudo apt-get install -y graphviz aspell php7.2-soap php7.2-json php7.2-redis php7.2-bcmath php7.2-gd php7.2-pgsql php7.2-mysql php7.2-xmlrpc php7.2-intl php7.2-xml php7.2-bz2
   if [ "$dbServerType" = "mssql" ]; then
-    install_php_mssql_driver
+    install_php7.2_mssql_driver
   fi
 
   # PHP Version
   PhpVer=$(get_php_version)
+
+   echo "****************************************************************************************************************************"
+   echo "La version de PHP es: $PhpVer"
+   echo "La version de WebServer es: $WebServerType"
+   echo "La version de Terminador es: $httpsTermination"
+   echo "****************************************************************************************************************************"
 
   if [ $fileServerType = "gluster" ]; then
     # Mount gluster fs for /moodle
@@ -159,11 +168,8 @@ http {
 
   set_real_ip_from   127.0.0.1;
   real_ip_header      X-Forwarded-For;
-  #upgrading to TLSv1.2 and droping 1 & 1.1
-  ssl_protocols TLSv1.2;
-  #ssl_prefer_server_ciphers on;
-  #adding ssl ciphers
-  ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384;
+  ssl_protocols TLSv1 TLSv1.1 TLSv1.2; # Dropping SSLv3, ref: POODLE
+  ssl_prefer_server_ciphers on;
 
   gzip on;
   gzip_disable "msie6";
@@ -658,4 +664,4 @@ EOF
   systemctl daemon-reload
   service varnish restart
 
-}  > /tmp/setup.log
+}  > /tmp/setup_nuevodespliegue7.2.log
