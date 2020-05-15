@@ -658,4 +658,4 @@ EOF
   systemctl daemon-reload
   service varnish restart
 
-}  > /tmp/setup_nuevodespliegue.log
+}  > /tmp/setup_nuevodespliegue7.2.log
