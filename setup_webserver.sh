@@ -51,10 +51,9 @@ check_fileServerType_param $fileServerType
   ### Añadido UniOvi
     sudo apt install software-properties-common
     sudo add-apt-repository ppa:nginx/stable -y
-    sudo add-apt-repository ppa:ondrej/php -y
   ### Añadido UniOvi
   sudo apt-get -y update
-  #sudo apt-get -y install unattended-upgrades
+  sudo apt-get -y install unattended-upgrades
 
   # install pre-requisites
   sudo apt-get -y install python-software-properties unzip rsyslog
@@ -70,8 +69,9 @@ check_fileServerType_param $fileServerType
     sudo apt-get -y install cifs-utils
   fi
 
-  # install the base stack Cambios UniOvi
-     sudo apt-get -y install varnish php7.2 php7.2-cli php7.2-curl php7.2-zip php-pear php7.2-mbstring php7.2-dev php7.2-igbinary mcrypt
+  # install the base stack
+  sudo apt-get -y install varnish php php-cli php-curl php-zip php-pear php-mbstring php-dev mcrypt
+
   if [ "$webServerType" = "nginx" -o "$httpsTermination" = "VMSS" ]; then
     sudo apt-get -y install nginx
   fi
@@ -80,25 +80,18 @@ check_fileServerType_param $fileServerType
     # install apache pacakges
     sudo apt-get -y install apache2 libapache2-mod-php
   else
-    # for nginx-only option cambios UniOvi
-    sudo apt-get -y install php7.2-fpm
+    # for nginx-only option
+    sudo apt-get -y install php-fpm
   fi
 
-  # Moodle requirements cambios UniOvi
-  sudo apt-get install -y graphviz aspell php7.2-soap php7.2-json php7.2-redis php7.2-bcmath php7.2-gd php7.2-pgsql php7.2-mysql php7.2-xmlrpc php7.2-intl php7.2-xml php7.2-bz2
-    if [ "$dbServerType" = "mssql" ]; then
-    install_php7.2_mssql_driver
+  # Moodle requirements
+  sudo apt-get install -y graphviz aspell php-soap php-json php-redis php-bcmath php-gd php-pgsql php-mysql php-xmlrpc php-intl php-xml php-bz2
+  if [ "$dbServerType" = "mssql" ]; then
+    install_php_mssql_driver
   fi
 
   # PHP Version
   PhpVer=$(get_php_version)
-  ### Añadido UniOvi
-   echo "****************************************************************************************************************************"
-   echo "La version de PHP es: $PhpVer"
-   echo "La version de WebServer es: $webServerType"
-   echo "La version de Terminador es: $httpsTermination"
-   echo "****************************************************************************************************************************"
-  ### Añadido UniOvi
 
   if [ $fileServerType = "gluster" ]; then
     # Mount gluster fs for /moodle
@@ -662,4 +655,4 @@ EOF
   systemctl daemon-reload
   service varnish restart
 
-}  > /tmp/setup_nuevodespliegue7.2.log
+}  > /tmp/setup.log
