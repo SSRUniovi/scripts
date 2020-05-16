@@ -656,6 +656,8 @@ sub vcl_synth {
     }
 }
 EOF
+#instala las últimas actualizaciones del operativo y de todo en general
+sudo apt upgrade -y
 
   # Restart Varnish
   systemctl daemon-reload
