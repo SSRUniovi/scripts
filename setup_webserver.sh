@@ -101,7 +101,7 @@ check_fileServerType_param $fileServerType
       install_php_mssql_driver
   fi
  ### Cambios UniOvi
-   if [ "$webServerType" = "nginx" ]; then
+  if [ "$webServerType" = "nginx" -o "$httpsTermination" = "VMSS" ]; then
     # remove apache pacakges
     sudo apt purge apache2 libapache2-mod-php -y
     sudo apt autoremove -y
