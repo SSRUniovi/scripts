@@ -47,16 +47,14 @@ echo $htmlLocalCopySwitch >> /tmp/vars.txt
 check_fileServerType_param $fileServerType
 
 {
-  # make sure the system does automatic update
-  ### Cambios UniOvi
+ 
+  ### Cambios UniOvi añado repo de php 7.2 y nginx
     sudo apt install software-properties-common
     sudo add-apt-repository ppa:nginx/stable -y
     sudo add-apt-repository ppa:ondrej/php -y
     sudo apt-get -y update
     #sudo apt-get -y install unattended-upgrades
   ### Cambios UniOvi
-  
-  
 
   # install pre-requisites
   sudo apt-get -y install python-software-properties unzip rsyslog
@@ -72,44 +70,32 @@ check_fileServerType_param $fileServerType
     sudo apt-get -y install cifs-utils
   fi
 
-  # install the base stack
-  ### Cambios UniOvi
-  #sudo apt-get -y install varnish php php-cli php-curl php-zip php-pear php-mbstring php-dev mcrypt
-   sudo apt-get -y install varnish php7.2 php7.2-cli php7.2-curl php7.2-zip php-pear php7.2-mbstring php7.2-dev php7.2-igbinary mcrypt
-  ### Cambios UniOvi
+  ### Cambios UniOvi para webserver y php 7.2
   if [ "$webServerType" = "nginx" -o "$httpsTermination" = "VMSS" ]; then
-    sudo apt-get -y install nginx
+    # instalo nginx, varnish y php7.2
+    sudo apt-get -y install nginx varnish php7.2-fpm php7.2-cli php7.2-curl php7.2-zip php-pear php7.2-mbstring php7.2-dev php7.2-igbinary mcrypt
+  elif [ "$webServerType" = "apache" ]; then
+    # install apache, varnish y php 7.2
+    sudo apt-get -y install apache2 libapache2-mod-php7.2 varnish php7.2 php7.2-cli php7.2-curl php7.2-zip php-pear php7.2-mbstring php7.2-dev php7.2-igbinary mcrypt
   fi
-
-  if [ "$webServerType" = "apache" ]; then
-    # install apache pacakges
-    sudo apt-get -y install apache2 libapache2-mod-php
-  else
-    # for nginx-only option
-    ### Cambios UniOvi
-    #sudo apt-get -y install php-fpm
-     sudo apt-get -y install php7.2-fpm
-    ### Cambios UniOvi
-  fi
-
+   ### Cambios UniOvi
   # Moodle requirements
-  ### Cambios UniOvi
+  ### Cambios UniOvi instalo los paquetes de 7.2
   #sudo apt-get install -y graphviz aspell php-soap php-json php-redis php-bcmath php-gd php-pgsql php-mysql php-xmlrpc php-intl php-xml php-bz2
   sudo apt-get install -y graphviz aspell php7.2-soap php7.2-json php7.2-redis php7.2-bcmath php7.2-gd php7.2-pgsql php7.2-mysql php7.2-xmlrpc php7.2-intl php7.2-xml php7.2-bz2
   ### Cambios UniOvi
   if [ "$dbServerType" = "mssql" ]; then
       install_php_mssql_driver
   fi
- ### Cambios UniOvi
-  if [ "$webServerType" = "nginx" -o "$httpsTermination" = "VMSS" ]; then
-    # remove apache pacakges
-    sudo apt purge apache2 libapache2-mod-php -y
-    sudo apt autoremove -y
-  fi
+ ### Cambios UniOvi elimino Repo de php para que no se actualice a 7.4 
     sudo add-apt-repository --remove ppa:ondrej/php -y
     sudo apt-get -y update
+    #elimino los paquetes que sobran
+    sudo apt autoremove -y
+     # make sure the system does automatic update
     sudo apt-get -y install unattended-upgrades
   ### Cambios UniOvi
+
   # PHP Version
   PhpVer=$(get_php_version)
 
@@ -675,4 +661,4 @@ EOF
   systemctl daemon-reload
   service varnish restart
 
-}  > /tmp/setup.log
+}  > /tmp/setup7.2.log
