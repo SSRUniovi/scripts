@@ -57,7 +57,15 @@ check_fileServerType_param $fileServerType
   ### Cambios UniOvi
 
   # install pre-requisites
-  sudo apt-get -y install python-software-properties unzip rsyslog
+  ### sudo apt-get -y install python-software-properties unzip rsyslog
+  
+  ### Cambios 18.04. El paquete python-software-properties parece obsoleto (salida sobre el propio 18.04:
+  ###  Package python-software-properties is not available, but is referred to by another package.
+  ###  This may mean that the package is missing, has been obsoleted, or
+  ###  is only available from another source
+  ###  However the following packages replace it:
+  ###   software-properties-common
+  sudo apt-get -y install unzip rsyslog
 
   sudo apt-get -y install postgresql-client mysql-client git
 
